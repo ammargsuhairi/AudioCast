@@ -24,3 +24,12 @@ Android jadi server (capture audio + HTTP/WebSocket), iPhone cukup buka Safari.
 - Matiin mode silent di iPhone. Biarin Safari tetap di depan.
 - Suara putus-putus: naikin slider Buffer. Delay kerasa: turunin.
 - Port bisa diganti di CastService.PORT.
+
+## Mode mic (buat suara navigasi)
+Suara Google Maps nggak bisa ditangkep lewat capture audio internal.
+Nyalain switch "Mode mic" sebelum tekan Mulai. App bakal ngerekam lewat mic Android
+(dengan noise suppression dan AGC bawaan HP kalau ada), lalu kirim ke iPhone.
+- Taruh Android dengan speaker yang menghadap mic-nya sendiri, volume Android sedang sampai keras.
+- Pakai headset di iPhone, jangan speaker. Kalau iPhone deket Android, suaranya bisa muter (feedback).
+- Naikin slider Volume di halaman iPhone kalau suaranya kecil.
+- Mode mic nggak butuh izin capture layar, cuma izin mic.
