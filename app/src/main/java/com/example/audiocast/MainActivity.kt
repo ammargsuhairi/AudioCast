@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import java.net.Inet4Address
@@ -25,6 +26,7 @@ class MainActivity : Activity() {
     private lateinit var tvStatus: TextView
     private lateinit var tvUrl: TextView
     private lateinit var btnMain: Button
+    private lateinit var swMic: Switch
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -60,6 +62,12 @@ class MainActivity : Activity() {
             setPadding(0, pad / 2, 0, pad)
         }
         root.addView(tvUrl)
+        swMic = Switch(this).apply {
+            text = "Mode mic (buat suara navigasi, ada noise suppression)"
+            textSize = 14f
+            setPadding(0, 0, 0, pad / 2)
+        }
+        root.addView(swMic)
         btnMain = Button(this)
         btnMain.setOnClickListener {
             if (CastService.running) {
@@ -93,7 +101,16 @@ class MainActivity : Activity() {
         val need = mutableListOf(Manifest.permission.RECORD_AUDIO)
         if (Build.VERSION.SDK_INT >= 33) need += Manifest.permission.POST_NOTIFICATIONS
         val missing = need.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
-        if (missing.isEmpty()) askProjection() else requestPermissions(missing.toTypedArray(), reqPerm)
+        if (missing.isEmpty()) proceed() else requestPermissions(missing.toTypedArray(), reqPerm)
+    }
+
+    private fun proceed() {
+        if (swMic.isChecked) {
+            startForegroundService(Intent(this, CastService::class.java).putExtra("mic", true))
+            ui.postDelayed({ refresh() }, 800)
+        } else {
+            askProjection()
+        }
     }
 
     private fun askProjection() {
@@ -106,7 +123,7 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(code, perms, results)
         if (code == reqPerm) {
             if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                askProjection()
+                proceed()
             } else {
                 Toast.makeText(this, "Izin rekam audio wajib dikasih", Toast.LENGTH_LONG).show()
             }
@@ -132,8 +149,9 @@ class MainActivity : Activity() {
     private fun refresh() {
         val on = CastService.running
         btnMain.text = if (on) "Berhenti" else "Mulai"
+        swMic.isEnabled = !on
         if (on) {
-            tvStatus.text = "Aktif. iPhone terhubung: ${CastService.clientCount}"
+            tvStatus.text = "Aktif (${if (CastService.micMode) "mic" else "audio internal"}). iPhone terhubung: ${CastService.clientCount}"
             val ips = localIps()
             tvUrl.text = if (ips.isEmpty()) {
                 "IP belum ketemu. Pastikan hotspot sudah nyala."
