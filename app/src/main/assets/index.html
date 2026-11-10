@@ -3,48 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
 <title>AudioCast</title>
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
+  :root {
+    color-scheme: dark;
+    --bg: #0e1116; --card: #1a1f27; --line: #2a303a;
+    --text: #e8eaed; --sub: #9aa0a6;
+    --blue: #3b82f6; --red: #ef4444; --green: #22c55e;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #0e1116; color: #e8eaed;
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
   }
-  main { width: 100%; max-width: 420px; padding: 24px; }
-  h1 { margin: 0 0 4px; font-size: 28px; }
-  .sub { margin: 0 0 24px; color: #9aa0a6; font-size: 14px; }
-  #status { padding: 12px 14px; border-radius: 12px; background: #1a1f27; margin-bottom: 20px; font-size: 15px; }
-  #status.ok { background: #12301f; color: #8be0a8; }
-  #status.err { background: #3a1818; color: #f4a3a3; }
-  button {
-    width: 100%; padding: 18px; font-size: 18px; font-weight: 600; border: 0; border-radius: 14px;
-    background: #3b82f6; color: #fff;
+  main { max-width: 420px; margin: 0 auto; padding: 36px 22px 28px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: -0.5px; }
+  .sub { margin: 4px 0 0; color: var(--sub); font-size: 14px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+    padding: 10px 18px 10px 14px; border-radius: 22px;
+    background: var(--card); border: 1px solid var(--line); font-size: 14px;
   }
-  button.stop { background: #ef4444; }
-  label { display: block; margin-top: 22px; font-size: 14px; color: #c4c7cc; }
-  input[type=range] { width: 100%; margin-top: 8px; }
-  .hint { margin-top: 26px; font-size: 12px; line-height: 1.5; color: #8a8f98; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sub); }
+  .pill.ok .dot { background: var(--green); box-shadow: 0 0 10px var(--green); }
+  .pill.err .dot { background: var(--red); }
+
+  .hero { display: flex; justify-content: center; margin-top: 30px; }
+  #go {
+    width: 168px; height: 168px; border-radius: 50%; border: 8px solid rgba(255,255,255,.18);
+    background: var(--blue); color: #fff; font-size: 20px; font-weight: 700; letter-spacing: 1.5px;
+  }
+  #go.stop { background: var(--red); }
+  #go:active { transform: scale(.97); }
+
+  canvas { display: block; width: 100%; height: 72px; margin-top: 26px; }
+
+  .card {
+    margin-top: 14px; padding: 16px 18px; border-radius: 16px;
+    background: var(--card); border: 1px solid var(--line);
+  }
+  .card .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+  .card .row b { font-weight: 600; }
+  .card .val { color: var(--sub); font-variant-numeric: tabular-nums; }
+  .card small { display: block; margin-top: 4px; color: var(--sub); font-size: 12px; }
+  input[type=range] { width: 100%; margin: 12px 0 0; accent-color: var(--blue); }
+
+  .hint { margin-top: 22px; font-size: 12px; line-height: 1.6; color: var(--sub); }
 </style>
 </head>
 <body>
 <main>
   <h1>AudioCast</h1>
   <p class="sub">Dengerin audio dari Android di iPhone ini</p>
-  <div id="status">Siap. Tap tombol di bawah buat mulai.</div>
-  <button id="go">Mulai dengar</button>
 
-  <label>Volume (bisa sampai 3x, berguna buat mode mic)
+  <div id="status" class="pill"><span class="dot"></span><span id="statusText">Siap, tap tombol buat mulai</span></div>
+
+  <div class="hero"><button id="go">MULAI</button></div>
+
+  <canvas id="viz" width="640" height="144"></canvas>
+
+  <div class="card">
+    <div class="row"><b>Volume</b><span class="val"><span id="volv">100</span>%</span></div>
     <input id="vol" type="range" min="0" max="3" step="0.05" value="1">
-  </label>
-  <label>Buffer: <span id="bufv">200</span> ms (naikin kalau suara putus-putus)
+    <small>Bisa sampai 300%, berguna buat mode mic.</small>
+  </div>
+
+  <div class="card">
+    <div class="row"><b>Buffer</b><span class="val"><span id="bufv">200</span> ms</span></div>
     <input id="buf" type="range" min="60" max="600" step="10" value="200">
-  </label>
+    <small>Naikin kalau suara putus-putus, turunin kalau delay kerasa.</small>
+  </div>
 
   <p class="hint">
     Kalau nggak ada suara: matiin mode silent (switch di samping iPhone), naikin volume,
-    dan biarin layar tetap nyala dengan Safari di depan.
+    dan biarin Safari tetap di depan dengan layar nyala. Pakai headset kalau iPhone deket Android.
   </p>
   <audio id="keep" playsinline></audio>
 </main>
@@ -52,14 +87,13 @@
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  let ctx = null, gain = null, ws = null, wakeLock = null;
+  let ctx = null, gain = null, analyser = null, ws = null, wakeLock = null, raf = 0;
   let started = false, nextTime = 0, rate = 44100, ch = 2;
   let target = 0.2;
 
   function setStatus(text, cls) {
-    const el = $('status');
-    el.textContent = text;
-    el.className = cls || '';
+    $('statusText').textContent = text;
+    $('status').className = 'pill ' + (cls || '');
   }
 
   function silentWav() {
@@ -73,18 +107,44 @@
     return new Blob([b], { type: 'audio/wav' });
   }
 
+  // Visualizer batang sederhana, biar kelihatan audionya masuk.
+  const canvas = $('viz'), g = canvas.getContext('2d');
+  function clearViz() { g.clearRect(0, 0, canvas.width, canvas.height); }
+  function draw() {
+    raf = requestAnimationFrame(draw);
+    if (!analyser) return;
+    const d = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(d);
+    clearViz();
+    const bars = 24, gap = 6, w = (canvas.width - gap * (bars - 1)) / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = d[Math.min(d.length - 1, Math.floor(i * d.length / bars))] / 255;
+      const h = Math.max(6, v * canvas.height);
+      g.fillStyle = '#3b82f6';
+      const x = i * (w + gap), y = canvas.height - h, r = Math.min(w / 2, 8);
+      g.beginPath();
+      g.moveTo(x, canvas.height); g.lineTo(x, y + r);
+      g.quadraticCurveTo(x, y, x + r, y); g.lineTo(x + w - r, y);
+      g.quadraticCurveTo(x + w, y, x + w, y + r); g.lineTo(x + w, canvas.height);
+      g.closePath(); g.fill();
+    }
+  }
+
   async function start() {
     started = true;
-    $('go').textContent = 'Berhenti';
+    $('go').textContent = 'STOP';
     $('go').className = 'stop';
     const AC = window.AudioContext || window.webkitAudioContext;
     ctx = new AC();
     try { await ctx.resume(); } catch (e) {}
     gain = ctx.createGain();
     gain.gain.value = parseFloat($('vol').value);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 128;
     gain.connect(ctx.destination);
+    gain.connect(analyser);
 
-    // Biar suara tetap keluar walau switch silent nyala dan audio session jadi "playback".
+    // Biar suara tetap keluar walau switch silent nyala.
     try { navigator.audioSession.type = 'playback'; } catch (e) {}
     const keep = $('keep');
     keep.src = URL.createObjectURL(silentWav());
@@ -92,19 +152,23 @@
     keep.play().catch(() => {});
 
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+    cancelAnimationFrame(raf);
+    draw();
     connect();
   }
 
   function stop() {
     started = false;
-    $('go').textContent = 'Mulai dengar';
+    $('go').textContent = 'MULAI';
     $('go').className = '';
     try { ws && ws.close(); } catch (e) {}
     try { ctx && ctx.close(); } catch (e) {}
     try { $('keep').pause(); } catch (e) {}
     try { wakeLock && wakeLock.release(); } catch (e) {}
-    ctx = null; ws = null; nextTime = 0;
-    setStatus('Berhenti.');
+    cancelAnimationFrame(raf);
+    clearViz();
+    ctx = null; ws = null; analyser = null; wakeLock = null; nextTime = 0;
+    setStatus('Berhenti');
   }
 
   function connect() {
@@ -112,7 +176,7 @@
     setStatus('Nyambung ke Android...');
     ws = new WebSocket('ws://' + location.host + '/ws');
     ws.binaryType = 'arraybuffer';
-    ws.onopen = () => { nextTime = 0; setStatus('Terhubung. Putar audio di Android.', 'ok'); };
+    ws.onopen = () => { nextTime = 0; setStatus('Terhubung, putar audio di Android', 'ok'); };
     ws.onmessage = (e) => {
       if (typeof e.data === 'string') {
         try { const m = JSON.parse(e.data); rate = m.rate; ch = m.ch; } catch (err) {}
@@ -120,7 +184,7 @@
       }
       play(e.data);
     };
-    ws.onerror = () => setStatus('Gagal nyambung. Cek hotspot dan app di Android.', 'err');
+    ws.onerror = () => setStatus('Gagal nyambung. Cek hotspot dan app di Android', 'err');
     ws.onclose = () => {
       if (!started) return;
       setStatus('Terputus, nyoba nyambung lagi...', 'err');
@@ -135,9 +199,9 @@
     if (frames === 0) return;
     const now = ctx.currentTime;
 
-    // Kalau antrean udah kejauhan dari target, buang chunk biar delay nggak numpuk.
+    // Antrean kejauhan dari target: buang chunk biar delay nggak numpuk.
     if (nextTime > now + target + 0.3) return;
-    // Kalau kehabisan buffer, mulai ulang dengan jarak aman.
+    // Kehabisan buffer: mulai ulang dengan jarak aman.
     if (nextTime < now + 0.02) nextTime = now + target;
 
     const ab = ctx.createBuffer(ch, frames, rate);
@@ -153,14 +217,21 @@
   }
 
   $('go').addEventListener('click', () => { started ? stop() : start(); });
-  $('vol').addEventListener('input', (e) => { if (gain) gain.gain.value = parseFloat(e.target.value); });
+  $('vol').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    if (gain) gain.gain.value = v;
+    $('volv').textContent = Math.round(v * 100);
+  });
   $('buf').addEventListener('input', (e) => {
     target = parseInt(e.target.value, 10) / 1000;
     $('bufv').textContent = e.target.value;
   });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && ctx) { ctx.resume().catch(() => {}); }
-    if (!document.hidden && started && !wakeLock) { navigator.wakeLock && navigator.wakeLock.request('screen').then(l => wakeLock = l).catch(() => {}); }
+    if (document.hidden) return;
+    if (ctx) ctx.resume().catch(() => {});
+    if (started && !wakeLock && navigator.wakeLock) {
+      navigator.wakeLock.request('screen').then((l) => { wakeLock = l; }).catch(() => {});
+    }
   });
 })();
 </script>
