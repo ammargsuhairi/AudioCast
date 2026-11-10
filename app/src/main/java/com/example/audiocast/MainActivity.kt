@@ -140,4 +140,4 @@ class MainActivity : Activity() {
         // Pemilih mode
         root.addView(tv("MODE", 12f, cSub, true).apply { letterSpacing = 0.12f }, lp(top = 28))
         segRow = LinearLayout(this).apply {
-            orientation =
+            orientation = LinearLayout.HORIZONTAL
